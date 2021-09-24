@@ -1,7 +1,6 @@
 # YOLOv1_VOC_2007
 
-环境配置：
-
+# 环境配置：
 
 
 python == 3.8
@@ -13,10 +12,8 @@ tensorflow == 2.4.1
 opencv-python == 4.5.3.56
 
 
-
-文件介绍： 
-
-先运行main.py调进行训练，再运行yolo_predict.py调用训练好的权重进行检测。
+# 文件介绍： 
+# 先运行main.py调进行训练，再运行yolo_predict.py调用训练好的权重进行检测。
 
 
 Annotations文件夹、JPEGImages文件夹：存储VOC2007目标检测数据集。
