@@ -13,7 +13,7 @@ opencv-python == 4.5.3.56
 
 
 # 文件介绍： 
-# 先运行main.py调进行训练，再运行yolo_predict.py调用训练好的权重进行检测。
+先运行main.py调进行训练，再运行yolo_predict.py调用训练好的权重进行检测。
 
 
 Annotations文件夹、JPEGImages文件夹：存储VOC2007目标检测数据集。
