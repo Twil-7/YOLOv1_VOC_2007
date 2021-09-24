@@ -1,0 +1,60 @@
+环境配置：
+
+python == 3.8
+keras == 2.4.3
+tensorflow == 2.4.1
+opencv-python == 4.5.3.56
+
+
+文件介绍： 
+
+main.py、yolo_predict.py两个文件可单独运行。main.py调用其他函数文件用于训练，yolo_predict.py调用训练权重进行检测。
+
+1、Annotations文件夹、JPEGImages文件夹：存储VOC2007目标检测数据集。
+
+2、demo文件夹：该模型对测试集的目标检测结果，效果大体使人满意，但目标定位的精确度不是十分的高。
+
+3、Logs文件夹：存储训练过程中的权重文件。
+
+4、raw_weights.hdf5：模型初始训练时加载进的权重文件，成功加载后，将网络的特征提取部分冰冻起来，此部分不再训练。
+
+5、tiny_yolov1_model.py：tiny_yolov1模型，其特征提取backbone比yolov1简单很多，但在VOC2007数据集下仍有一定效果。
+
+6、yolo_loss.py：yolov1损失函数，对无目标物体置信度加权系数0.5，有目标物体置信度加权系数1，类别加权系数1，物体x、y、w、h坐标位置加权系数5。
+
+7、train.py文件：导入初始权重raw_weights.hdf5，冰冻特征提取部分前31层，优化器adam = Adam(lr=1e-4, amsgrad=True)效果最佳。
+
+8、predict.py：检测测试集的目标检测效果。
+
+先借助矩阵广播机制，将yolov1输出结果转化为真实bounding box像素坐标。利用三次mask筛选保留候选区域。
+第1次mask：筛选扔掉置信度不够的边框位置。
+第2次mask：yolov1每个grid中有两个预测器，从两两中选择更好的那个。
+第3次mask：利用非极大抑制，筛选掉重叠区域过高的边框位置。
+
+
+
+实验过程记录：
+
+1、源码算法效果的确有问题。
+
+调用作者源码进行训练，训练集3000张图片，训练35轮之后自动停止，val loss达到瓶颈降低不下去，最佳val loss = 69。
+yolov1的确存在损失函数降不到那么低这个问题，主要是模型能力不够，无法学习出好的效果。
+
+
+2、重构yolov1算法后，训练集9000张图片，最佳优化器：先使用adam = Adam(lr=1e-4, amsgrad=True)，后使用sgd = optimizers.SGD(lr=1e-5, momentum=0.9)，效果最佳。
+最佳val loss = 67.05，后续又达到瓶颈无法降低。
+
+
+3、利用yolov1训练自己数据集时，必须将特征提取backbone冰冻。一旦解冻训练所有网络层，val loss效果很差，可能是模型能力不佳，难以训练的原因。
+Total params: 27,099,950
+Trainable params: 18,441,150
+Non-trainable params: 8,658,800
+
+4、yolov1解码过程中必须把握两个阈值参数含义：
+
+第1个是confidence可信度，YOLO对每个grid都会输出该grid含有目标物体的可信程度，我们把某一些可信度高的bounding box筛选出来。
+
+第2个nms_score，代表非极大抑制处理时的阈值。如果两个目标框重叠，重叠度大于该阈值的将会被舍弃一个。
+
+如果设置nms_score = 0，则完全不会出现任何重叠的bounding box；
+如果设置nms_score = 1，则非极大抑制过程完全失效。
